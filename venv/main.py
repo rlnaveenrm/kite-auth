@@ -11,7 +11,7 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 url = 'https://www.moneycontrol.com/india/stockpricequote/refineries/relianceindustries/RI'
-stock_id = url.split('/')[-1]
+stock_id = url.split('/')[-2]
 print(stock_id)
 r = requests.get(url)
 soup = BeautifulSoup(r.content, 'html.parser')
