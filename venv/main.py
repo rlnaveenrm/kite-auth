@@ -1,60 +1,34 @@
-import logging
-import json
-from kiteconnect import KiteConnect
-import authentication
+import requests
+from bs4 import BeautifulSoup
+import time
+import datetime
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
 
-logging.basicConfig(level=logging.DEBUG)
+cred = credentials.Certificate("./fs_key.json")
+firebase_admin.initialize_app(cred)
+db = firestore.client()
 
-kite = KiteConnect(api_key="v1w7029zlz5daycp")
+url = 'https://www.moneycontrol.com/india/stockpricequote/refineries/relianceindustries/RI'
+stock_id = url.split('/')[-1]
+print(stock_id)
+r = requests.get(url)
+soup = BeautifulSoup(r.content, 'html.parser')
+bse = {}
+nse = {}
+price = soup.select('.span_price_wrap')
+last_updated = soup.select('.display_lastupd')
+bse['price'] = price[0].text
+nse['price'] = price[1].text
+bse['last_updated'] = last_updated[0].text
+nse['last_updated'] = last_updated[1].text
 
-# Redirect the user to the login url obtained
-# from kite.login_url(), and receive the request_token
-# from the registered redirect url after the login flow.
-# Once you have the request_token, obtain the access_token
-# as follows.
+doc_ref = db.collection(u'stocks').document(stock_id)
+doc_ref.set({
+    u'bse': bse,
+    u'nse': nse,
+})
 
-# url = kite.login_url()
-#
-# print(url)
-#
-#
-# data = kite.generate_session("KqpOzQYyouaEnvZLd7RcDBJrC91I3E6j", api_secret="2dzsdypnfa44rm2sfr6cr17va0ic07fd")
-#
-# print(data["access_token"])
-
-kite.set_access_token(authentication.access_token)
-
-
-print(json.dumps(kite.positions(),indent = 2))
-# # Place an order
-# try:
-#     order_id = kite.place_order(tradingsymbol="INFY",
-#                                 exchange=kite.EXCHANGE_NSE,
-#                                 transaction_type=kite.TRANSACTION_TYPE_BUY,
-#                                 quantity=1,
-#                                 order_type=kite.ORDER_TYPE_MARKET,
-#                                 product=kite.PRODUCT_NRML)
-#
-#     logging.info("Order placed. ID is: {}".format(order_id))
-# except Exception as e:
-#     logging.info("Order placement failed: {}".format(e.message))
-#
-# # Fetch all orders
-# kite.orders()
-#
-# # Get instruments
-# kite.instruments()
-#
-# # Place an mutual fund order
-# kite.place_mf_order(
-#     tradingsymbol="INF090I01239",
-#     transaction_type=kite.TRANSACTION_TYPE_BUY,
-#     amount=5000,
-#     tag="mytag"
-# )
-#
-# # Cancel a mutual fund order
-# kite.cancel_mf_order(order_id="order_id")
-#
-# # Get mutual fund instruments
-# kite.mf_instruments()
+def convert_to_unix(last_updated):
+    time.mktime(datetime.datetime.strptime(last_updated, "%d/%m/%Y").timetuple())
