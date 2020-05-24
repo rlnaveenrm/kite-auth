@@ -10,7 +10,7 @@ cred = credentials.Certificate("./fs_key.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-url = 'https://www.moneycontrol.com/india/stockpricequote/refineries/relianceindustries/RI'
+url = 'https://www.moneycontrol.com/india/stockpricequote/computers-software/infosys/IT'
 stock_id = url.split('/')[-1]
 print(stock_id)
 r = requests.get(url)
