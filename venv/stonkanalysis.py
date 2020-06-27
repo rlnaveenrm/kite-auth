@@ -61,15 +61,21 @@ def stonkanalysis(start_date_year = 2020, start_date_month = 1, start_date_day =
     stock_data = list(company_list)
     perc_matrix = []
     summary_dic = {}
+    volume_dict = {}
+    mcap_dict = {}
     for i in range(len(stock_data)):
         data_frame = nse.get_history(symbol = company_list[i], start = start_date, end = end_date)
+        #print(data_frame)
+        volume_array = np.array(data_frame['Volume'])
+        #print(volume_array)
         data_frame.drop(['VWAP','Series'], axis = 1,inplace =True)
         if i==0:
             no_of_days = len(np.array(data_frame['Close']))
             perc_matrix = np.zeros((int(no_of_days)-1,len(percentage_calc),len(stock_data)))
         perc_matrix[:,:,i] =  calculate_perc_matrix(data_frame, int(no_of_days), percentage_calc)
-        stock_dict = {company_list[i]: perc_matrix}
+        stock_dict = {company_list[i]: perc_matrix.tolist()}
         summary_dic.update(stock_dict)   
+        print(summary_dic)
     return summary_dic
 
 stonkanalysis()
