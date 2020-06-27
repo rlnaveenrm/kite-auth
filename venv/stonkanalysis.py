@@ -6,7 +6,7 @@ from datetime import date, timedelta, time
 
 
 
-def calculate_perc_matrix(data_frame, number_of_day, percentage_calc = [1,2,3,4,5,6,7,8,9,10]):
+def calculate_perc_matrix(data_frame, number_of_day = 10, percentage_calc = [1,2,3,4,5,6,7,8,9,10]):
     close = np.array(data_frame['Close'])
     high = np.array(data_frame['High'])
     low = np.array(data_frame['Low'])
@@ -91,7 +91,20 @@ def stonkanalysis(start_date_year = 2020, start_date_month = 1, start_date_day =
         print(summary_dic)
     return summary_dic
 
-def getstonkfocus(start_date_year = 2020, start_date_month = 1, start_date_day = 1, no_of_days = 10, no_check_companies = 100, interest_period = 3, interest_percentage = 3):
+def getmarketcap(volume_array, close_price_array):
+    mean_volume = np.mean(volume_array)
+    mean_close_price = np.mean(close_price_array)
+
+    m_cap = mean_volume * mean_close_price
+    return m_cap
+    if m_cap > 200000000000:
+        return 1
+    elif 50000000000 < m_cap < 200000000000:
+        return 2
+    else:
+        return 3
+
+def getstonkfocus(start_date_year = 2020, start_date_month = 1, start_date_day = 1, no_of_days = 10, no_check_companies = 1, interest_period = 3, interest_percentage = 3):
     '''
     '''
     # Initiate nse connection and get stock names
@@ -99,7 +112,6 @@ def getstonkfocus(start_date_year = 2020, start_date_month = 1, start_date_day =
     stock_list = nsel.get_stock_codes()
     # Get the stock list
     stock_list= {v: k for k, v in stock_list.items()}
-    no_of_comapies = len(stock_list)
     iterator = iter(stock_list.items())
     break_cons = 0
     company_list = []
@@ -111,35 +123,33 @@ def getstonkfocus(start_date_year = 2020, start_date_month = 1, start_date_day =
 
     for i in iterator:
         if break_cons>=1:
-            company_list.append(i[0])
+            company_list.append(i[0])   
             company_code.append(i[1])
         break_cons += 1
         if break_cons ==  no_check_companies:
             break
-
-    percentage_calc = [1,2,3,4,5,6,7,8,9,10]
+    company_list.append('TATAMOTORS')
     stock_data = list(company_list)
     perc_matrix = []
     summary_dic = {}
-    volume_dict = {}
-    mcap_dict = {}
     for i in range(len(stock_data)):
         data_frame = nse.get_history(symbol = company_list[i], start = start_date, end = end_date)
-        #print(data_frame)
-        #volume_array = np.array(data_frame['Volume'])
-        #print(volume_array)
+        volume_array = np.array(data_frame['Volume'])
+        print(volume_array)
+        close_array = np.array(data_frame['Close'])
         data_frame.drop(['VWAP','Series'], axis = 1,inplace =True)
         if i==0:
             no_of_days = len(np.array(data_frame['Close']))
             perc_matrix = np.zeros((1,1,len(stock_data)))
         perc_matrix[:,:,i] =  calculate_perc(data_frame, interest_period, interest_percentage)
-        #print(perc_matrix)
-        stock_dict = {company_list[i]: perc_matrix[0, 0, i]}
+        if(volume_array.size == 0):
+            stock_dict = {company_list[i]:[perc_matrix[0, 0, i],0,-1]}
+        else:
+            stock_dict = {company_list[i]:[perc_matrix[0, 0, i],np.mean(volume_array),getmarketcap(volume_array, close_array)]}
         summary_dic.update(stock_dict)   
+        print(summary_dic)
+
     return summary_dic
-
-
-
 
 getstonkfocus()
 
