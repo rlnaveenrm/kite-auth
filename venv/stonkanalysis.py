@@ -1,10 +1,8 @@
 import nsepy as nse
 import pandas as pd
 import numpy as np
-import sys
 from nsetools import Nse
 from datetime import date, timedelta
-import matplotlib.pyplot as plt
 
 
 
@@ -16,13 +14,11 @@ def calculate_perc_matrix(data_frame, number_of_day, percentage_calc = [1,2,3,4,
     matrix_stock = np.zeros((number_of_day-1,len(percentage_calc)))
     for k in range(number_of_day-1):
         percentage =  calc_one_wait_period(close,high,k+1)
-        #print(percentage)
         for i in range(len(percentage_calc)):
             if(np.sum(percentage!=-9999999)):            
                 matrix_stock[k,i] = (np.sum((percentage)>=percentage_calc[i]))/np.sum(percentage!=-9999999)
             else:
                 matrix_stock[k,i] = 0
-    #print(matrix_stock)
     return matrix_stock
 
 
