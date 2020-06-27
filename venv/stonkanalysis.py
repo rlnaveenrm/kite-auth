@@ -35,7 +35,7 @@ def calc_one_wait_period(close,high,wait_period):
         return percentage
     return percentage
     
-def main():
+def stonkanalysis(start_date_year = 2020, start_date_month = 1, start_date_day = 1, no_of_days = 10, no_check_companies = 100):
     '''
     '''
     # Initiate nse connection and get stock names
@@ -48,12 +48,7 @@ def main():
     break_cons = 0
     company_list = []
     company_code = []
-    # start  date should be a working stock market day
-    start_date_year = sys.argv[1]
-    start_date_month = sys.argv[2]
-    start_date_day = sys.argv[3]
     # no of days should account for the holidays in between
-    no_of_days = sys.argv[4]
     start_date = date(int(start_date_year), int(start_date_month), int(start_date_day))
     end_date = start_date + timedelta(days = int(no_of_days))
     print(start_date, end_date)
@@ -63,13 +58,13 @@ def main():
             company_list.append(i[0])
             company_code.append(i[1])
         break_cons += 1
-        #if break_cons==100:
-        #    break
-    #company_list.append('ALOKINDS')
+        if break_cons ==  no_check_companies:
+            break
+
     percentage_calc = [1,2,3,4,5,6,7,8,9,10]
     stock_data = list(company_list)
     perc_matrix = []
-
+    summary_dic = {}
     for i in range(len(stock_data)):
         data_frame = nse.get_history(symbol = company_list[i], start = start_date, end = end_date)
         data_frame.drop(['VWAP','Series'], axis = 1,inplace =True)
@@ -77,15 +72,12 @@ def main():
             no_of_days = len(np.array(data_frame['Close']))
             perc_matrix = np.zeros((int(no_of_days)-1,len(percentage_calc),len(stock_data)))
         perc_matrix[:,:,i] =  calculate_perc_matrix(data_frame, int(no_of_days), percentage_calc)
-    plt.figure()
-    plt.axes()
-    plt.plot(perc_matrix[2,2,:])
-    plt.xticks(range(len(company_code)), company_code, size='small', rotation='vertical')
-    plt.show()
+        stock_dict = {company_list[i]: perc_matrix}
+        summary_dic.update(stock_dict)   
+    return summary_dic
+
+stonkanalysis()
 
 
-if __name__ == "__main__":
-    main()
-
-
+      
 
