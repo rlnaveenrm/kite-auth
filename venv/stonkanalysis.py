@@ -145,7 +145,7 @@ def getstonkfocus(start_date_year = 2020, start_date_month = 1, start_date_day =
         if(volume_array.size == 0):
             stock_dict = {company_list[i]:[perc_matrix[0, 0, i],0,-1]}
         else:
-            stock_dict = {company_list[i]:[perc_matrix[0, 0, i],np.mean(volume_array),getmarketcap(volume_array, close_array)]}
+            stock_dict = {company_list[i]:[perc_matrix[0, 0, i],np.mean(volume_array),np.mean(close_array)]}
         summary_dic.update(stock_dict)   
         print(summary_dic)
 
