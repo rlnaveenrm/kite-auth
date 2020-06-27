@@ -2,7 +2,7 @@ import nsepy as nse
 import pandas as pd
 import numpy as np
 from nsetools import Nse
-from datetime import date, timedelta
+from datetime import date, timedelta, time
 
 
 
@@ -21,6 +21,19 @@ def calculate_perc_matrix(data_frame, number_of_day, percentage_calc = [1,2,3,4,
                 matrix_stock[k,i] = 0
     return matrix_stock
 
+def calculate_perc(data_frame, interest_period, interest_percentage):
+    close = np.array(data_frame['Close'])
+    high = np.array(data_frame['High'])
+    low = np.array(data_frame['Low'])
+    open = np.array(data_frame['Open'])
+    percentage =  calc_one_wait_period(close,high,interest_period)
+    probability_gain = -1
+    if(np.sum(percentage!=-9999999)):            
+        probability_gain = (np.sum((percentage)>=interest_percentage))/np.sum(percentage!=-9999999)    
+    else:
+        probability_gain = 0
+    return probability_gain
+
 
 def calc_one_wait_period(close,high,wait_period):
     percentage = -9999999*np.ones((len(close)))
@@ -31,7 +44,7 @@ def calc_one_wait_period(close,high,wait_period):
         return percentage
     return percentage
     
-def stonkanalysis(start_date_year = 2020, start_date_month = 1, start_date_day = 1, no_of_days = 10, no_check_companies = 100):
+def stonkanalysis(start_date_year = 2020, start_date_month = 1, start_date_day = 1, no_of_days = 10, no_check_companies = 1):
     '''
     '''
     # Initiate nse connection and get stock names
@@ -78,7 +91,57 @@ def stonkanalysis(start_date_year = 2020, start_date_month = 1, start_date_day =
         print(summary_dic)
     return summary_dic
 
-stonkanalysis()
+def getstonkfocus(start_date_year = 2020, start_date_month = 1, start_date_day = 1, no_of_days = 10, no_check_companies = 100, interest_period = 3, interest_percentage = 3):
+    '''
+    '''
+    # Initiate nse connection and get stock names
+    nsel = Nse()
+    stock_list = nsel.get_stock_codes()
+    # Get the stock list
+    stock_list= {v: k for k, v in stock_list.items()}
+    no_of_comapies = len(stock_list)
+    iterator = iter(stock_list.items())
+    break_cons = 0
+    company_list = []
+    company_code = []
+    # no of days should account for the holidays in between
+    start_date = date(int(start_date_year), int(start_date_month), int(start_date_day))
+    end_date = start_date + timedelta(days = int(no_of_days))
+    print(start_date, end_date)
+
+    for i in iterator:
+        if break_cons>=1:
+            company_list.append(i[0])
+            company_code.append(i[1])
+        break_cons += 1
+        if break_cons ==  no_check_companies:
+            break
+
+    percentage_calc = [1,2,3,4,5,6,7,8,9,10]
+    stock_data = list(company_list)
+    perc_matrix = []
+    summary_dic = {}
+    volume_dict = {}
+    mcap_dict = {}
+    for i in range(len(stock_data)):
+        data_frame = nse.get_history(symbol = company_list[i], start = start_date, end = end_date)
+        #print(data_frame)
+        #volume_array = np.array(data_frame['Volume'])
+        #print(volume_array)
+        data_frame.drop(['VWAP','Series'], axis = 1,inplace =True)
+        if i==0:
+            no_of_days = len(np.array(data_frame['Close']))
+            perc_matrix = np.zeros((1,1,len(stock_data)))
+        perc_matrix[:,:,i] =  calculate_perc(data_frame, interest_period, interest_percentage)
+        #print(perc_matrix)
+        stock_dict = {company_list[i]: perc_matrix[0, 0, i]}
+        summary_dic.update(stock_dict)   
+    return summary_dic
+
+
+
+
+getstonkfocus()
 
 
       
